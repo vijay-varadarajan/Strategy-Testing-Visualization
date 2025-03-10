@@ -31,18 +31,18 @@ def get_permutation(
     relative_close = np.empty((n_markets, perm_n))
 
     for mkt_i, reg_bars in enumerate(ohlc):
-        log_bars = np.log(reg_bars[['open', 'high', 'low', 'close']])
+        log_bars = np.log(reg_bars[[('Open', 'BTC-USD'), ('High','BTC-USD'), ('Low', 'BTC-USD'), ('Close', 'BTC-USD')]])
 
         # Get start bar
         start_bar[mkt_i] = log_bars.iloc[start_index].to_numpy()
 
         # Open relative to last close
-        r_o = (log_bars['open'] - log_bars['close'].shift()).to_numpy()
+        r_o = (log_bars[('Open', 'BTC-USD')] - log_bars[('Close', 'BTC-USD')].shift()).to_numpy()
         
         # Get prices relative to this bars open
-        r_h = (log_bars['high'] - log_bars['open']).to_numpy()
-        r_l = (log_bars['low'] - log_bars['open']).to_numpy()
-        r_c = (log_bars['close'] - log_bars['open']).to_numpy()
+        r_h = (log_bars[('High', 'BTC-USD')] - log_bars[('Open', 'BTC-USD')]).to_numpy()
+        r_l = (log_bars[('Low', 'BTC-USD')] - log_bars[('Open', 'BTC-USD')]).to_numpy()
+        r_c = (log_bars[('Close', 'BTC-USD')] - log_bars[('Open', 'BTC-USD')]).to_numpy()
 
         relative_open[mkt_i] = r_o[perm_index:]
         relative_high[mkt_i] = r_h[perm_index:]
@@ -67,7 +67,7 @@ def get_permutation(
         perm_bars = np.zeros((n_bars, 4))
 
         # Copy over real data before start index 
-        log_bars = np.log(reg_bars[['open', 'high', 'low', 'close']]).to_numpy().copy()
+        log_bars = np.log(reg_bars[[('Open', 'BTC-USD'), ('High','BTC-USD'), ('Low', 'BTC-USD'), ('Close', 'BTC-USD')]]).to_numpy().copy()
         perm_bars[:start_index] = log_bars[:start_index]
         
         # Copy start bar
@@ -81,7 +81,7 @@ def get_permutation(
             perm_bars[i, 3] = perm_bars[i, 0] + relative_close[mkt_i][k]
 
         perm_bars = np.exp(perm_bars)
-        perm_bars = pd.DataFrame(perm_bars, index=time_index, columns=['open', 'high', 'low', 'close'])
+        perm_bars = pd.DataFrame(perm_bars, index=time_index, columns=[('Open', 'BTC-USD'), ('High','BTC-USD'), ('Low', 'BTC-USD'), ('Close', 'BTC-USD')])
 
         perm_ohlc.append(perm_bars)
 
@@ -100,8 +100,8 @@ if __name__ == '__main__':
 
     btc_perm = get_permutation(btc_real)
 
-    btc_real_r = np.log(btc_real['close']).diff() 
-    btc_perm_r = np.log(btc_perm['close']).diff()
+    btc_real_r = np.log(btc_real[('Close', 'BTC-USD')]).diff() 
+    btc_perm_r = np.log(btc_perm[('Close', 'BTC-USD')]).diff()
 
     print(f"Mean. REAL: {btc_real_r.mean():14.6f} PERM: {btc_perm_r.mean():14.6f}")
     print(f"Stdd. REAL: {btc_real_r.std():14.6f} PERM: {btc_perm_r.std():14.6f}")
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     eth_real = pd.read_parquet('ETHUSD3600.pq')
     eth_real.index = eth_real.index.astype('datetime64[s]')
     eth_real = eth_real[(eth_real.index.year >= 2018) & (eth_real.index.year < 2020)]
-    eth_real_r = np.log(eth_real['close']).diff()
+    eth_real_r = np.log(eth_real[('Close', 'BTC-USD')]).diff()
     
     print("") 
 
@@ -119,21 +119,21 @@ if __name__ == '__main__':
     btc_perm = permed[0]
     eth_perm = permed[1]
     
-    btc_perm_r = np.log(btc_perm['close']).diff()
-    eth_perm_r = np.log(eth_perm['close']).diff()
+    btc_perm_r = np.log(btc_perm[('Close', 'BTC-USD')]).diff()
+    eth_perm_r = np.log(eth_perm[('Close', 'BTC-USD')]).diff()
     print(f"BTC&ETH Correlation REAL: {btc_real_r.corr(eth_real_r):5.3f} PERM: {btc_perm_r.corr(eth_perm_r):5.3f}")
 
     plt.style.use("dark_background")    
-    np.log(btc_real['close']).diff().cumsum().plot(color='orange', label='BTCUSD')
-    np.log(eth_real['close']).diff().cumsum().plot(color='purple', label='ETHUSD')
+    np.log(btc_real[('Close', 'BTC-USD')]).diff().cumsum().plot(color='orange', label='BTCUSD')
+    np.log(eth_real[('Close', 'BTC-USD')]).diff().cumsum().plot(color='purple', label='ETHUSD')
     
     plt.ylabel("Cumulative Log Return")
     plt.title("Real BTCUSD and ETHUSD")
     plt.legend()
     plt.show()
 
-    np.log(btc_perm['close']).diff().cumsum().plot(color='orange', label='BTCUSD')
-    np.log(eth_perm['close']).diff().cumsum().plot(color='purple', label='ETHUSD')
+    np.log(btc_perm[('Close', 'BTC-USD')]).diff().cumsum().plot(color='orange', label='BTCUSD')
+    np.log(eth_perm[('Close', 'BTC-USD')]).diff().cumsum().plot(color='purple', label='ETHUSD')
     plt.title("Permuted BTCUSD and ETHUSD")
     plt.ylabel("Cumulative Log Return")
     plt.legend()

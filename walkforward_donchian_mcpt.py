@@ -7,10 +7,10 @@ from bar_permute import get_permutation
 from donchian import  walkforward_donch
 
 df = pd.read_parquet('BTCUSD3600.pq')
-df.index = df.index.astype('datetime64[s]')
-df = df[(df.index.year >= 2016) & (df.index.year < 2021)]
+df.index = df.index.tz_localize(None)
+df = df[(df.index.year >= 2024) & (df.index.year < 2025)]
 
-df['r'] = np.log(df['close']).diff().shift(-1)
+df['r'] = np.log(df[('Close', 'BTC-USD')]).diff().shift(-1)
 
 train_window = 24 * 365 * 4
 df['donch_wf_signal'] = walkforward_donch(df, train_lookback=train_window)
@@ -25,7 +25,7 @@ print("Walkforward MCPT")
 for perm_i in tqdm(range(1, n_permutations)):
     wf_perm = get_permutation(df, start_index=train_window)
     
-    wf_perm['r'] = np.log(wf_perm['close']).diff().shift(-1) 
+    wf_perm['r'] = np.log(wf_perm[('Close', 'BTC-USD')]).diff().shift(-1) 
     wf_perm_sig = walkforward_donch(wf_perm, train_lookback=train_window)
     perm_rets = wf_perm['r'] * wf_perm_sig
     perm_pf = perm_rets[perm_rets > 0].sum() / perm_rets[perm_rets < 0].abs().sum()

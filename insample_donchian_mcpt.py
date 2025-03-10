@@ -8,14 +8,14 @@ from bar_permute import get_permutation
     
 
 df = pd.read_parquet('BTCUSD3600.pq')
-df.index = df.index.astype('datetime64[s]')
+df.index = df.index.tz_localize(None)
 
-train_df = df[(df.index.year >= 2016) & (df.index.year < 2020)]
+train_df = df[(df.index.year >= 2024) & (df.index.year < 2025)]
 best_lookback, best_real_pf = optimize_donchian(train_df)
 print("In-sample PF", best_real_pf, "Best Lookback", best_lookback)
 
 
-n_permutations = 1000
+n_permutations = 105
 perm_better_count = 1
 permuted_pfs = []
 print("In-Sample MCPT")

@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 
 def donchian_breakout(ohlc: pd.DataFrame, lookback: int):
     # input df is assumed to have a 'close' column
-    upper = ohlc['close'].rolling(lookback - 1).max().shift(1)
-    lower = ohlc['close'].rolling(lookback - 1).min().shift(1)
+    upper = ohlc[('Close', 'BTC-USD')].rolling(lookback - 1).max().shift(1)
+    lower = ohlc[('Close', 'BTC-USD')].rolling(lookback - 1).min().shift(1)
     signal = pd.Series(np.full(len(ohlc), np.nan), index=ohlc.index)
-    signal.loc[ohlc['close'] > upper] = 1
-    signal.loc[ohlc['close'] < lower] = -1
+    signal.loc[ohlc[('Close', 'BTC-USD')] > upper] = 1
+    signal.loc[ohlc[('Close', 'BTC-USD')] < lower] = -1
     signal = signal.ffill()
     return signal
 
@@ -16,7 +16,7 @@ def optimize_donchian(ohlc: pd.DataFrame):
 
     best_pf = 0
     best_lookback = -1
-    r = np.log(ohlc['close']).diff().shift(-1)
+    r = np.log(ohlc[('Close', 'BTC-USD')]).diff().shift(-1)
     for lookback in range(12, 169):
         signal = donchian_breakout(ohlc, lookback)
         sig_rets = signal * r
@@ -48,16 +48,18 @@ def walkforward_donch(ohlc: pd.DataFrame, train_lookback: int = 24 * 365 * 4, tr
 if __name__ == '__main__':
 
     df = pd.read_parquet('BTCUSD3600.pq')
-    df.index = df.index.astype('datetime64[s]')
+    df.index = df.index.tz_localize(None)
 
-    df = df[(df.index.year >= 2016) & (df.index.year < 2020)] 
+    df = df[(df.index.year >= 2024) & (df.index.year < 2025)] 
+    print(df.columns)
+    
     best_lookback, best_real_pf = optimize_donchian(df)
 
     # Best lookback = 19, best_real_pf = 1.08
     
     signal = donchian_breakout(df, best_lookback) 
-
-    df['r'] = np.log(df['close']).diff().shift(-1)
+    
+    df['r'] = np.log(df[('Close', 'BTC-USD')]).diff().shift(-1)
     df['donch_r'] = df['r'] * signal
 
     plt.style.use("dark_background")

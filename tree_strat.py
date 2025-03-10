@@ -64,9 +64,9 @@ def tree_strategy(ohlc: pd.DataFrame, model):
 
 if __name__ == '__main__':
     df = pd.read_parquet('BTCUSD3600.pq')
-    df.index = df.index.astype('datetime64[s]')
+    df.index = df.index.tz_localize(None)
 
-    df['r'] = np.log(df['close']).diff().shift(-1)
+    df['r'] = np.log(df[('Close', 'BTC-USD')]).diff().shift(-1)
 
     train_df = df[(df.index.year >= 2016) & (df.index.year < 2020)]
 
