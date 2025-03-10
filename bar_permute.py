@@ -95,7 +95,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     
     btc_real = pd.read_parquet('BTCUSD3600.pq')
-    btc_real.index = btc_real.index.astype('datetime64[s]')
+    btc_real.index = btc_real.index.tz_localize(None)
     btc_real = btc_real[(btc_real.index.year >= 2018) & (btc_real.index.year < 2020)]
 
     btc_perm = get_permutation(btc_real)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     print(f"Kurt. REAL: {btc_real_r.kurt():14.6f} PERM: {btc_perm_r.kurt():14.6f}")
 
     eth_real = pd.read_parquet('ETHUSD3600.pq')
-    eth_real.index = eth_real.index.astype('datetime64[s]')
+    eth_real.index = eth_real.index.tz_localize(None)
     eth_real = eth_real[(eth_real.index.year >= 2018) & (eth_real.index.year < 2020)]
     eth_real_r = np.log(eth_real[('Close', 'BTC-USD')]).diff()
     

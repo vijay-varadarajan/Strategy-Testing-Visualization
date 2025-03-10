@@ -1,0 +1,76 @@
+We have a client that has a few trading indicators that have reached out to us to
+help him utilize the best python libraries for visualizing and backtesting/forward
+testing his indicators and strategies.
+client has data - for various instruments - ranging from tick by tick to daily OHLC
+and V or we will download testing from open sources
+He is requesting us to come up with a setup where he can upload his data file,
+upload his algorithm (convert from TV to python) or use a simple existing python
+strategy – MA crossover i.e.), input parameters for the backtesting and visualize
+the candle stick chart and backtesting results.
+the client wants to setup what is shown in this yt
+video https://www.youtube.com/watch?v=NLBXgSmRBgU&t=432s
+YouTube
+This is among various testing he wishes to do in future- so my objective is to come
+up with a quick demonstration prototype to win his longer-term project
+To make this quick – please follow exactly what this YT video is showing and use
+his code from github. Just follow the yt video and check for any optimizations you
+can do with the python code
+is this something you can set up quickly? i want to set up this prototype so we can
+win the bigger project.
+I have Contabo hosting for this – when you are ready
+
+
+
+
+SAMPLE PINESCRIPT:
+//@version=5
+strategy("Donchian Breakout Optimization", overlay=true, default_qty_type=strategy.cash, initial_capital=100000, commission_type=strategy.commission.percent, commission_value=0.1)
+
+// Input parameters for optimization
+lookback = input.int(20, "Lookback Period", minval=12, maxval=168)
+
+// Calculate Donchian Bands
+upperBand = ta.highest(high, lookback - 1)[1]
+lowerBand = ta.lowest(low, lookback - 1)[1]
+
+// Generate signals
+var float signal = na
+if (close > upperBand)
+    signal := 1
+else if (close < lowerBand)
+    signal := -1
+else
+    signal := signal[1]
+
+// Calculate log returns
+logReturn = math.log(close) - math.log(close[1])
+
+// Strategy returns
+strategyReturn = signal * logReturn
+
+// Track cumulative returns for equity curve
+var float cumulativeReturn = 0
+cumulativeReturn += strategyReturn
+
+// Calculate profit factor components
+var float positiveSum = 0
+var float negativeSum = 0
+
+if (strategyReturn > 0)
+    positiveSum += strategyReturn
+else if (strategyReturn < 0)
+    negativeSum += math.abs(strategyReturn)
+
+// Profit factor calculation
+profitFactor = positiveSum / negativeSum
+
+// Plotting
+plot(cumulativeReturn, title="Cumulative Return", color=color.red)
+plotshape(series=close > upperBand, title="Long Signal", location=location.belowbar, color=color.green, style=shape.labelup)
+plotshape(series=close < lowerBand, title="Short Signal", location=location.abovebar, color=color.red, style=shape.labeldown)
+
+// Strategy execution (for visualization)
+if (signal == 1)
+    strategy.entry("Buy", strategy.long)
+else if (signal == -1)
+    strategy.entry("Sell", strategy.short)
